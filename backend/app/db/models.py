@@ -1,8 +1,8 @@
 """SQLAlchemy ORM models."""
 
-from datetime import datetime
+from datetime import date, datetime
 
-from sqlalchemy import Boolean, DateTime, ForeignKey, Integer, String, Text, func
+from sqlalchemy import Boolean, Date, DateTime, ForeignKey, Integer, String, Text, func
 from sqlalchemy.orm import DeclarativeBase, Mapped, mapped_column, relationship
 
 
@@ -19,10 +19,19 @@ class Child(Base):
 
     id: Mapped[int] = mapped_column(Integer, primary_key=True, autoincrement=True)
     name: Mapped[str] = mapped_column(String(100), nullable=False)
-    age: Mapped[int] = mapped_column(Integer, nullable=False)
+    date_of_birth: Mapped[date] = mapped_column(Date, nullable=False)
+    password_hash: Mapped[str] = mapped_column(String(255), nullable=False)
     token_balance: Mapped[int] = mapped_column(Integer, default=0, nullable=False)
     parent_account_id: Mapped[str | None] = mapped_column(String(100), nullable=True)
     created_at: Mapped[datetime] = mapped_column(DateTime(timezone=True), server_default=func.now())
+
+    @property
+    def age(self) -> int:
+        """Compute age from date of birth."""
+        today = date.today()
+        return today.year - self.date_of_birth.year - (
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
 
     completions: Mapped[list["ActivityCompletion"]] = relationship(
         "ActivityCompletion", back_populates="child", cascade="all, delete-orphan"

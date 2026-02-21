@@ -1,10 +1,10 @@
 """API request/response schemas."""
 
-from datetime import datetime
+from datetime import date, datetime
 from enum import Enum
 from typing import Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, model_validator
 
 
 class ActivityCategory(str, Enum):
@@ -52,10 +52,31 @@ class ChildBase(BaseModel):
     age: int = Field(ge=5, le=12)
 
 
-class ChildCreate(ChildBase):
-    """Schema for creating a child."""
+class ChildRegister(BaseModel):
+    """Schema for kid registration."""
 
-    pass
+    name: str = Field(min_length=1, max_length=100)
+    date_of_birth: date
+    password: str = Field(min_length=6)
+
+    @model_validator(mode="after")
+    def age_must_be_5_to_12(self):
+        """Ensure child is between 5 and 12 years old."""
+        today = date.today()
+        age = today.year - self.date_of_birth.year - (
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
+        if age < 5 or age > 12:
+            raise ValueError("Child must be between 5 and 12 years old")
+        return self
+
+    @property
+    def age(self) -> int:
+        """Compute age from date of birth."""
+        today = date.today()
+        return today.year - self.date_of_birth.year - (
+            (today.month, today.day) < (self.date_of_birth.month, self.date_of_birth.day)
+        )
 
 
 class ChildResponse(ChildBase):
