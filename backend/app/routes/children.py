@@ -17,11 +17,12 @@ async def register_child(
     req: ChildRegister,
     session: AsyncSession = Depends(get_async_session),
 ):
-    """Register a new child. Requires name, date of birth, and password (age 5–12)."""
+    """Register a new child. Requires name and date of birth (age 5–12). Password is optional."""
+    password_hash = hash_password(req.password) if req.password else None
     child = Child(
         name=req.name,
         date_of_birth=req.date_of_birth,
-        password_hash=hash_password(req.password),
+        password_hash=password_hash,
         token_balance=0,
     )
     session.add(child)

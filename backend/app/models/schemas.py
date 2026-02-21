@@ -57,7 +57,7 @@ class ChildRegister(BaseModel):
 
     name: str = Field(min_length=1, max_length=100)
     date_of_birth: date
-    password: str = Field(min_length=6)
+    password: Optional[str] = Field(default=None, min_length=6)
 
     @model_validator(mode="after")
     def age_must_be_5_to_12(self):
