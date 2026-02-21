@@ -105,7 +105,7 @@ All under prefix `/api/v1`.
 | `GET` | `/activities/` | List activities (query: `category`, `age_min`, `age_max`, `location`) |
 | `POST` | `/activities/generate` | Generate activities via AI and persist to DB |
 | `POST` | `/activities/{id}/submit-photo?child_id={id}` | Submit photo (multipart); validate via AI; award tokens on success |
-| `POST` | `/children/register` | Register child (body: `name`, `date_of_birth`, `password`; age 5–12, password min 6 chars) |
+| `POST` | `/children/register` | Register child (body: `name`, `date_of_birth`; optional `password` min 6 chars; age 5–12) |
 | `GET` | `/children/{id}` | Get child profile and token balance |
 | `GET` | `/children/{id}/tokens` | Get child token balance |
 | `GET` | `/children/{id}/completions` | List completed activities (with activity title, tokens_awarded, validated) |
@@ -190,7 +190,7 @@ SYDNEY_LON_MAX=151.4
 ## 9. Frontend–Backend Contract (Notes for Frontend Team)
 
 - **Base URL:** `{host}/api/v1`
-- **Register child:** `POST /children/register` with JSON `{ "name": string, "date_of_birth": "YYYY-MM-DD", "password": string }` (age 5–12, password min 6 chars). Parent/guardian details not required yet (planned for next MVP).
+- **Register child:** `POST /children/register` with JSON `{ "name": string, "date_of_birth": "YYYY-MM-DD", "password"?: string }` (age 5–12; password optional, min 6 chars if provided). Parent details planned for next MVP.
 - **List activities:** `GET /activities/?category=beach&age_min=5&age_max=8&location=Bondi` (all query params optional).
 - **Submit photo:** `POST /activities/{id}/submit-photo?child_id={child_id}` with multipart form field `photo` (image file, max 20MB). Response: `{ "valid": bool, "reasoning": string, "tokens_awarded": number }`.
 - **Tokens:** Returned in `GET /children/{id}` as `token_balance`, and in submit-photo response as `tokens_awarded`.
