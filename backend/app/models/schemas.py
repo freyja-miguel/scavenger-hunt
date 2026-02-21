@@ -52,6 +52,12 @@ class ChildBase(BaseModel):
     age: int = Field(ge=5, le=12)
 
 
+class ChildCreate(ChildBase):
+    """Schema for creating a child."""
+
+    pass
+
+
 class ChildResponse(ChildBase):
     """Child response with token balance."""
 
@@ -60,6 +66,17 @@ class ChildResponse(ChildBase):
 
     class Config:
         from_attributes = True
+
+
+class CompletionResponse(BaseModel):
+    """Activity completion summary for child profile."""
+
+    id: int
+    activity_id: int
+    activity_title: str
+    completed_at: datetime
+    tokens_awarded: int
+    validated: bool
 
 
 class PhotoValidationRequest(BaseModel):
