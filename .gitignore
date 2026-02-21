@@ -13,6 +13,9 @@ venv/
 # Uploads
 uploads/
 
+# SQLite
+*.db
+
 # IDE
 .idea/
 .vscode/

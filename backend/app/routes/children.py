@@ -5,19 +5,25 @@ from sqlalchemy.ext.asyncio import AsyncSession
 
 from app.db.base import get_async_session
 from app.db.models import Child
-from app.models.schemas import ChildCreate, ChildResponse, CompletionResponse
+from app.models.schemas import ChildRegister, ChildResponse, CompletionResponse
 from app.services.activity_service import get_child_by_id, list_child_completions
+from app.services.auth_service import hash_password
 
 router = APIRouter(prefix="/children", tags=["children"])
 
 
-@router.post("/", response_model=ChildResponse)
-async def create_child(
-    req: ChildCreate,
+@router.post("/register", response_model=ChildResponse)
+async def register_child(
+    req: ChildRegister,
     session: AsyncSession = Depends(get_async_session),
 ):
-    """Create a new child profile."""
-    child = Child(name=req.name, age=req.age, token_balance=0)
+    """Register a new child. Requires name, date of birth, and password (age 5–12)."""
+    child = Child(
+        name=req.name,
+        date_of_birth=req.date_of_birth,
+        password_hash=hash_password(req.password),
+        token_balance=0,
+    )
     session.add(child)
     await session.flush()
     await session.refresh(child)

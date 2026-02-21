@@ -17,19 +17,34 @@ class AIService:
         self.client = Groq(api_key=settings.groq_api_key) if settings.groq_api_key else None
 
     async def generate_activities(self, req: GenerateActivitiesRequest) -> list[dict]:
-        """Generate activity list via Groq LLM based on category, age, location."""
+        """Generate object-based scavenger hunt activities via Groq LLM."""
         if not self.client:
             raise ValueError("GROQ_API_KEY not configured")
 
-        prompt = f"""Generate {req.count} treasure hunt activities for kids in Sydney.
+        category_hints = {
+            "beach": "shells, sea glass, driftwood, pebbles, feathers, seaweed, interesting rocks",
+            "bush": "leaves with specific shapes, bark textures, seed pods, flowers, feathers, nuts, gumnuts",
+            "garden": "leaves by shape or color, flowers by color, seeds, petals, insects (e.g. butterfly), stones",
+            "city": "objects of a specific shape and color, signs, textures, patterns, street art, plants in parks",
+        }
+        hints = category_hints.get(req.category.value, "natural or urban objects")
+
+        prompt = f"""Generate {req.count} scavenger hunt activities for kids aged {req.age_min}-{req.age_max} in Sydney.
 Category: {req.category.value}
-Age group: {req.age_min}-{req.age_max} years
 Location/area: {req.location_sydney}
 
+Each activity must be a "find an object" task that the kid can photograph. Use objects like: {hints}.
+
+Rules:
+- Be specific: include shape, color, or texture (e.g. "find a leaf shaped like a heart", "find a shell that is spiral-shaped and white", "find something round and blue").
+- Age {req.age_min}-7: simpler (e.g. "find a red flower", "find a smooth stone").
+- Age 8-12: can be more specific (e.g. "find a leaf with 5 pointed edges", "find a shell with stripes").
+- The kid will take a photo of the object they find; AI will validate that the photo shows the correct object.
+
 For each activity provide:
-- title: Short catchy title
-- description: What the child should find/do (1-2 sentences)
-- ai_validation_prompt: What to look for in the photo to validate completion (e.g. "Must show a fountain or water feature")
+- title: Short catchy title (e.g. "Spiral Shell Hunter")
+- description: Clear instruction for the kid (e.g. "Find a spiral-shaped shell on the beach")
+- ai_validation_prompt: Exact criteria for photo validation - object type, shape, and/or color the AI must see (e.g. "Photo must show a spiral or coiled shell, not flat or broken")
 - location_sydney: Specific place if applicable
 
 Return JSON array only, no markdown."""
@@ -56,14 +71,16 @@ Return JSON array only, no markdown."""
 
         # Groq vision accepts base64 or URL
         # Llama 4 Scout supports image input
-        prompt = f"""You are validating a photo for a kids treasure hunt activity.
-Activity: {activity_description}
-Validation criteria: {validation_criteria}
+        prompt = f"""You are validating a photo for a kids scavenger hunt activity.
+The kid was asked to find an object and take a photo of it.
 
-Does this photo show the child actually completing the activity? Consider:
-- Does the image match what was asked?
-- Does it look like a real photo (not a screenshot or stock image)?
-- Is it appropriate for a kids app?
+Activity: {activity_description}
+Validation criteria (what the photo must show): {validation_criteria}
+
+Check:
+1. Does the photo clearly show the required object (correct type, shape, color)?
+2. Is it a real photo of a physical object (not a screenshot, drawing, or stock image)?
+3. Is it appropriate for a kids app?
 
 Respond with JSON only: {{"valid": true/false, "reasoning": "brief explanation"}}"""
 
